@@ -1,11 +1,10 @@
 apply plugin: 'groovy'
-apply plugin: 'maven'
 apply plugin: 'eclipse'
 apply plugin: 'signing'
 apply plugin: 'maven-publish'
 
 group = 'com.gmongo'
-version = '1.5'
+version = '1.5.OL-1.dev'
 
 project.ext {
   group = 'com.gmongo'
@@ -20,59 +19,82 @@ repositories {
 }
 
 dependencies {
-  compile group: 'org.codehaus.groovy', name: 'groovy', version: project.ext.groovyVersion
-  compile group: 'org.codehaus.groovy', name: 'groovy-ant', version: project.ext.groovyVersion
-  compile group: 'org.mongodb', name: 'mongo-java-driver', version: '2.13.0'
+  implementation group: 'org.codehaus.groovy', name: 'groovy', version: project.ext.groovyVersion
+  implementation group: 'org.codehaus.groovy', name: 'groovy-ant', version: project.ext.groovyVersion
+  implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.14'
 
-  testCompile group: 'org.codehaus.groovy', name: 'groovy-test', version: project.ext.groovyVersion
-  testCompile group: 'junit', name: 'junit', version: '4.10'
+  testImplementation group: 'org.codehaus.groovy', name: 'groovy-test', version: project.ext.groovyVersion
+  testImplementation group: 'junit', name: 'junit', version: '4.10'
 }
 
-task source << {
-  ant.jar(destfile: "$buildDir/${project.ext.artifact}-${version}-sources.jar") {
-    fileset (dir: 'src/main/groovy', includes: '**/*.groovy')
+tasks.register('sourceJar') {
+  group = 'build'
+  description = 'Creates the source jar artifact.'
+  doLast {
+    ant.jar(destfile: "$buildDir/${project.ext.artifact}-${project.version}-sources.jar") {
+      fileset (dir: 'src/main/groovy', includes: '**/*.groovy')
+    }
   }
 }
 
-task prepareBundle(dependsOn: [ 'build', 'source', 'groovydoc', 'pom' ]) << {
-  ant.copy(file: "$buildDir/libs/${project.ext.artifact}-${version}.jar", todir: project.ext.bundleDir)
-  ant.copy(file: "$buildDir/${project.ext.artifact}-${version}-sources.jar", todir: project.ext.bundleDir)
-  ant.copy(file: "$buildDir/pom.xml", todir: project.ext.bundleDir)
-  ant.jar(destfile: "${project.ext.bundleDir}/${project.ext.artifact}-${version}-javadoc.jar") {
-    fileset (dir: "$buildDir/docs/groovydoc")
-  }
-  signing.sign(new File(project.ext.bundleDir).listFiles())
-}
-
-task packBundle << {
-  ant.jar(destfile: "${project.ext.bundleDir}/${project.ext.artifact}-${version}-bundle.jar", basedir: new File(project.ext.bundleDir))
-}
-
-task pom << {
-  pom {
-    project {
-      groupId project.ext.group
-      artifactId project.ext.artifact
-      name 'gmongo'
-      description 'Mongodb for Groovy'
-      url 'https://github.com/poiati/gmongo'
+tasks.register('generatePom') {
+  group = 'publishing'
+  description = 'Generates a Maven POM file equivalent to the legacy maven plugin output.'
+  doLast {
+    def writer = new StringWriter()
+    def xml = new groovy.xml.MarkupBuilder(writer)
+    xml.project(xmlns: 'http://maven.apache.org/POM/4.0.0',
+                'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                'xsi:schemaLocation': 'http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd') {
+      modelVersion('4.0.0')
+      groupId(project.ext.group)
+      artifactId(project.ext.artifact)
+      version(project.version)
+      name('gmongo')
+      description('Mongodb for Groovy')
+      url('https://github.com/poiati/gmongo')
       licenses {
         license {
-          name 'The Apache Software License, Version 2.0'
-          url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-          distribution 'repo'
+          name('The Apache Software License, Version 2.0')
+          url('http://www.apache.org/licenses/LICENSE-2.0.txt')
+          distribution('repo')
         }
       }
       scm {
-        url 'http://github.com/poiati/gmongo'
+        url('http://github.com/poiati/gmongo')
       }
       developers {
         developer {
-          name 'Paulo Poiati'
-          email 'paulogpoiati@gmail.com'
-          url 'http://blog.paulopoiati.com'
+          name('Paulo Poiati')
+          email('paulogpoiati@gmail.com')
+          url('http://blog.paulopoiati.com')
         }
       }
     }
-  }.writeTo("$buildDir/pom.xml")
+    file("$buildDir/pom.xml").text = writer.toString()
+  }
+}
+
+tasks.register('prepareBundle') {
+  group = 'distribution'
+  description = 'Collects build outputs and documentation into a bundle directory.'
+  dependsOn 'build', 'sourceJar', 'groovydoc', 'generatePom'
+  doLast {
+    ant.copy(file: "$buildDir/libs/${project.ext.artifact}-${project.version}.jar", todir: project.ext.bundleDir)
+    ant.copy(file: "$buildDir/${project.ext.artifact}-${project.version}-sources.jar", todir: project.ext.bundleDir)
+    ant.copy(file: "$buildDir/pom.xml", todir: project.ext.bundleDir)
+    ant.jar(destfile: "${project.ext.bundleDir}/${project.ext.artifact}-${project.version}-javadoc.jar") {
+      fileset (dir: "$buildDir/docs/groovydoc")
+    }
+    signing.sign(new File(project.ext.bundleDir).listFiles())
+  }
+}
+
+tasks.register('packBundle') {
+  group = 'distribution'
+  description = 'Packages the bundle directory into a distributable jar.'
+  dependsOn 'prepareBundle'
+  doLast {
+    ant.jar(destfile: "${project.ext.bundleDir}/${project.ext.artifact}-${project.version}-bundle.jar", basedir: new File(project.ext.bundleDir))
+  }
 }
