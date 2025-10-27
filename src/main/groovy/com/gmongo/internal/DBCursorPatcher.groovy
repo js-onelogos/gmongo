@@ -36,6 +36,8 @@ class DBCursorPatcher {
       DBCursorPatcher.SIMPLE_METHODS.each { delegate[ it ] = _simpleMapToDBObjectPatchDBCursor.curry( it ) }
     }
     
+    _patchResultHandling( cursor )
+    
     _patchCopy( cursor )
     _markAsPatched( cursor )
     return cursor
@@ -46,6 +48,27 @@ class DBCursorPatcher {
     cursor.metaClass.copy = { ->
       def method = _findMetaMethod( DBCursor, COPY_METHOD, [ ] )
       return patch( _invokeMethod( method, delegate, [ ] ) )
+    }
+  }
+
+  private static _patchResultHandling( cursor ) {
+    def nextMethod = _findMetaMethod( DBCursor, "next", [ ] )
+    def tryNextMethod = _findMetaMethod( DBCursor, "tryNext", [ ] )
+    def oneMethod = _findMetaMethod( DBCursor, "one", [ ] )
+    cursor.metaClass.next = { ->
+      def result = _invokeMethod( nextMethod, delegate, [ ] )
+      DBRefPatcher.attach(result, delegate.getCollection()?.getDB())
+      return result
+    }
+    cursor.metaClass.tryNext = { ->
+      def result = _invokeMethod( tryNextMethod, delegate, [ ] )
+      DBRefPatcher.attach(result, delegate.getCollection()?.getDB())
+      return result
+    }
+    cursor.metaClass.one = { ->
+      def result = _invokeMethod( oneMethod, delegate, [ ] )
+      DBRefPatcher.attach(result, delegate.getCollection()?.getDB())
+      return result
     }
   }
 }

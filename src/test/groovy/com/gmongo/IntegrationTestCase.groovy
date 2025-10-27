@@ -1,6 +1,6 @@
 package com.gmongo
 
-import com.mongodb.DBAddress
+import com.mongodb.ServerAddress
 import com.mongodb.WriteConcern
 
 class IntegrationTestCase extends GroovyTestCase {
@@ -10,8 +10,8 @@ class IntegrationTestCase extends GroovyTestCase {
   def mongo, db
 
   void setUp() {
-    mongo = new GMongo(new DBAddress('localhost', 27017, DB_NAME))
-    mongo.setWriteConcern(WriteConcern.SAFE)
+    mongo = new GMongo(new ServerAddress('localhost', 27017))
+    mongo.setWriteConcern(WriteConcern.ACKNOWLEDGED)
     db = mongo.getDB(DB_NAME)
   }
 

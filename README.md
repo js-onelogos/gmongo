@@ -7,6 +7,12 @@ The goal of this project is to provide a more simple, easy to use and less verbo
 
 More information can be found here: http://blog.paulopoiati.com/2010/06/20/gmongo-0-5-released/.
 
+# Driver Compatibility
+
+GMongo now builds against `mongo-java-driver` 3.12.14. The upstream driver no longer ships the legacy `DBAddress` and `MongoURI` types, so the related GMongo constructors and the `GMongo.connect(DBAddress)` helper are no longer available. Use the `ServerAddress`/`MongoClientURI` constructors or `GMongo.connect(String host, int port, String dbName)` when migrating existing code.
+
+MongoDB 5.0+ removed the legacy `group` database command that backed `DBCollection#group(String reducer, ...)`. When connected to those server versions the call now raises `MongoCommandException` (error code 59). Aggregation pipelines should be used instead; the unit test is tolerant of the command not being available.
+
 # Usage
 
 com.gmongo.GMongo doesn't extends com.mongodb.Mongo. It delegate all methods calls to a Mongo instance. If

@@ -15,16 +15,13 @@ limitations under the License.
 */
 package com.gmongo
 
-import com.mongodb.ServerAddress
-import com.mongodb.MongoOptions
-import com.mongodb.MongoURI
-import com.mongodb.MongoClientURI
-import com.mongodb.MongoClientOptions
-import com.mongodb.MongoCredential
-import com.mongodb.MongoClient
-import com.mongodb.DB
+import java.util.List
 
-import com.gmongo.internal.DBPatcher
+import com.mongodb.MongoClient
+import com.mongodb.MongoClientOptions
+import com.mongodb.MongoClientURI
+import com.mongodb.MongoCredential
+import com.mongodb.ServerAddress
 
 class GMongoClient extends GMongo {
 
@@ -49,7 +46,7 @@ class GMongoClient extends GMongo {
   }
 
   GMongoClient(ServerAddress addr, MongoClientOptions options) {
-    this.mongo = new MongoClient(addr, new MongoOptions(options));
+    this.mongo = new MongoClient(addr, options);
   }
 
   GMongoClient(List<ServerAddress> seeds) {
@@ -65,7 +62,7 @@ class GMongoClient extends GMongo {
   }
 
   GMongoClient(List<ServerAddress> seeds, MongoClientOptions options) {
-    this.mongo = new MongoClient(seeds, new MongoOptions(options));
+    this.mongo = new MongoClient(seeds, options);
   }
 
   GMongoClient(MongoClientURI uri) {

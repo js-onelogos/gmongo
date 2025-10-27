@@ -6,7 +6,7 @@ class UpdateClosureDelegateConcurrencyBugTest extends IntegrationTestCase {
   
   void setUp() {
     super.setUp()
-    mongo.setWriteConcern(WriteConcern.NORMAL)
+    mongo.setWriteConcern(WriteConcern.UNACKNOWLEDGED)
     db.dropDatabase()
   }
 

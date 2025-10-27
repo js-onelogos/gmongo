@@ -47,14 +47,20 @@ class DBPatcher {
       
       // Execute a code block between DB#requestStart and DB#requestDone
       inRequest = { Closure fn ->
-        delegate.requestStart()
+        def start = delegate.metaClass.getMetaMethod('requestStart', [] as Object[])
+        def done = delegate.metaClass.getMetaMethod('requestDone', [] as Object[])
+        start?.invoke(delegate, [] as Object[])
         try {
-            fn.call()
+          fn.call()
         } finally {
-            delegate.requestDone()
+          done?.invoke(delegate, [] as Object[])
         }
       }
       
+      getLastError = { ->
+        delegate.command(new BasicDBObject("getlasterror": 1))
+      }
+
       // Add methods that accept a Map in the place of a DBObject
       command = _simpleMapToDBObjectPatchDB.curry( DBPatcher.METHOD_COMMAND )
       createCollection = this._simpleStringMapToDBObjectPatch.curry( DB, DBPatcher.METHOD_CREATE_COLLECTION )
@@ -62,6 +68,7 @@ class DBPatcher {
     
     // Mark this instance as Patched
     _markAsPatched( db )
+    DBRefPatcher.register(db)
     return db
   }
   

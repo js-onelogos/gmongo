@@ -33,7 +33,9 @@ class Patcher {
         def method = target.class.metaClass.getMetaMethod(nameOrAlias, _types(cargs, true))
         if (method == null) {
           def other = _getAdditionalMethod(addmethods, nameOrAlias, target, args)
-          return other.call(cargs as List) 
+          def result = other.call(*(cargs as List))
+          afterreturn.get(nameOrAlias)?.call(args, cargs, result, delegate)
+          return result
         }
         return _invoke(method, delegate, args, cargs, afterreturn)
       }
@@ -47,7 +49,7 @@ class Patcher {
 
   static _invoke(method, delegate, originalArgs, invokeArgs, afterreturn) {
     def result = method.doMethodInvoke(delegate, invokeArgs)
-    afterreturn.get(method.name)?.call(originalArgs, invokeArgs, result)
+    afterreturn.get(method.name)?.call(originalArgs, invokeArgs, result, delegate)
     return result
   }
   

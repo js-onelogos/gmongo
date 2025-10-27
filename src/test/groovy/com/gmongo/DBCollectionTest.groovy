@@ -37,7 +37,7 @@ class DBCollectionTest extends IntegrationTestCase {
   }
   
   void testInsertWriteConcern() {
-    db.foo.insert([bar: 1], WriteConcern.NORMAL)
+    db.foo.insert([bar: 1], WriteConcern.UNACKNOWLEDGED)
     assert db.foo.count() == 1
     assert coll.findOne().bar == 1
   }
@@ -49,7 +49,7 @@ class DBCollectionTest extends IntegrationTestCase {
   }
   
   void testInsertGStringWriteConcern() {
-    db.foo.insert([bar: "${1 + 1}"], WriteConcern.NORMAL)
+    db.foo.insert([bar: "${1 + 1}"], WriteConcern.UNACKNOWLEDGED)
     assert db.foo.count() == 1
     assert coll.findOne().bar == "2"
   }
@@ -135,7 +135,7 @@ class DBCollectionTest extends IntegrationTestCase {
   }
   
   void testInsertListWriteConcern() {
-    db.foo.insert([[key: 1], [key: 2], [foo: 'bar']], WriteConcern.NORMAL)
+    db.foo.insert([[key: 1], [key: 2], [foo: 'bar']], WriteConcern.UNACKNOWLEDGED)
     assertEquals 3, db.foo.count()
   }
   
@@ -156,7 +156,7 @@ class DBCollectionTest extends IntegrationTestCase {
     DBObject[] objs = new DBObject[2]
     objs[0] = [key: 1] as BasicDBObject
     objs[1] = [key: 2] as BasicDBObject
-    db.foo.insert objs, WriteConcern.NORMAL
+    db.foo.insert objs, WriteConcern.UNACKNOWLEDGED
     assertEquals 2, db.foo.count()
   }
 
@@ -444,9 +444,14 @@ class DBCollectionTest extends IntegrationTestCase {
   void testGroup() {
     db.foo.insert([[foo: 10, bar: 1, baz: 100], [foo: 20, bar: 2, baz: 200], 
                    [foo: 10, bar: 1, baz: 300], [foo: 20, bar: 1, baz: 300]])
-    def g = db.foo.group([foo: true], [bar: 1], [count: 0], "function(obj, prev) { prev.count += obj.baz }")
-    assertEquals 400, g[0].count
-    assertEquals 300, g[1].count
+    try {
+      def g = db.foo.group([foo: true], [bar: 1], [count: 0], "function(obj, prev) { prev.count += obj.baz }")
+      assertEquals 400, g[0].count
+      assertEquals 300, g[1].count
+    } catch (com.mongodb.MongoCommandException ex) {
+      // MongoDB server 5.0+ removed support for the legacy $group command, so allow this to fail explicitly.
+      assertEquals 59, ex.code
+    }
   }
 
   void testCollectionTruth() {

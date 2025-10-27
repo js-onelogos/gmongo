@@ -4,13 +4,12 @@ import com.gmongo.internal.Patcher
 
 import com.mongodb.DB
 import com.mongodb.ServerAddress
-import com.mongodb.DBAddress
 import com.mongodb.MongoClientURI
 
 class GMongoClientTest extends IntegrationTestCase {
 
   void setUp() {
-    mongo = new GMongoClient(new DBAddress('localhost', 27017, DB_NAME))
+    mongo = new GMongoClient(new ServerAddress('localhost', 27017))
   }
 
   void testGetDbGroovy() {
