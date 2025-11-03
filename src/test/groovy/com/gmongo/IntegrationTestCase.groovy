@@ -11,7 +11,7 @@ class IntegrationTestCase extends GroovyTestCase {
 
   void setUp() {
     mongo = new GMongo(new ServerAddress('localhost', 27017))
-    mongo.setWriteConcern(WriteConcern.ACKNOWLEDGED)
+    // mongo.setWriteConcern(WriteConcern.ACKNOWLEDGED)
     db = mongo.getDB(DB_NAME)
   }
 

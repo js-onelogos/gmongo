@@ -18,7 +18,7 @@ package com.gmongo
 import java.util.List;
 
 import com.mongodb.DB
-import com.mongodb.Mongo
+// import com.mongodb.Mongo
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoClientURI
@@ -30,7 +30,7 @@ import com.gmongo.internal.DBPatcher
 class GMongo {
 
   @Delegate
-  Mongo mongo
+  MongoClient mongo
 
   static DB connect(String host, int port, String dbName) {
     def mongoClient = new MongoClient(host, port)
@@ -55,7 +55,7 @@ class GMongo {
     patchAndReturn mongoClient.getDB(dbName)
   }
 
-  GMongo(Mongo mongo) {
+  GMongo(MongoClient mongo) {
     this.mongo = mongo
   }
 
@@ -107,9 +107,9 @@ class GMongo {
     patchAndReturn mongo.getDB(name)
   }
 
-  void setWriteConcern(WriteConcern writeConcern) {
-    mongo.setWriteConcern(writeConcern)
-  }
+  // void setWriteConcern(WriteConcern writeConcern) {
+  //   mongo.setWriteConcern(writeConcern)
+  // }
 
   static private patchAndReturn(db) {
     DBPatcher.patch(db); return db
