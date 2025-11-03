@@ -4,7 +4,7 @@ apply plugin: 'signing'
 apply plugin: 'maven-publish'
 
 group = 'com.gmongo'
-version = '1.5.OL-1.dev'
+version = '1.5.OL-4.x-driver'
 
 project.ext {
   group = 'com.gmongo'
@@ -21,7 +21,7 @@ repositories {
 dependencies {
   implementation group: 'org.codehaus.groovy', name: 'groovy', version: project.ext.groovyVersion
   implementation group: 'org.codehaus.groovy', name: 'groovy-ant', version: project.ext.groovyVersion
-  implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.14'
+  implementation group: 'org.mongodb', name: 'mongodb-driver-legacy', version: '4.11.5'
 
   testImplementation group: 'org.codehaus.groovy', name: 'groovy-test', version: project.ext.groovyVersion
   testImplementation group: 'junit', name: 'junit', version: '4.10'
